@@ -499,4 +499,25 @@ def games_played_today_scl():
     items.sort(key=lambda x: x[0])
     return [s for _, s in items]
 
+
+
+def get_games_today():
+    games = []
+    for g in GAMES_DATA:  # <-- aquí debes usar donde guardas los juegos descargados
+        try:
+            # Usa la fecha del JSON
+            dt = datetime.strptime(g.get("display_date", ""), "%m/%d/%Y %H:%M:%S")
+            today = datetime.now().date()
+            if dt.date() == today:
+                home = g.get("home_full_name", "???")
+                away = g.get("away_full_name", "???")
+                hr = g.get("home_runs", "-")
+                ar = g.get("away_runs", "-")
+                hn = g.get("home_name", "")
+                an = g.get("away_name", "")
+                games.append(f"{away} ({an}) {ar} - {home} ({hn}) {hr}")
+        except Exception:
+            continue
+    return games
+
 # ====== FIN DEL BLOQUE ======
