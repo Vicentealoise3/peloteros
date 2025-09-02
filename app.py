@@ -36,7 +36,14 @@ def index():
 def api_standings():
     rows = get_cached_standings()
     return jsonify(rows)
-
+@app.route("/api/full")
+def api_full():
+    rows = get_cached_standings()
+    return jsonify({
+        "standings": rows,
+        "games_today": standings.get_games_today()  # asegúrate de que exista esta función
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
+
