@@ -1,6 +1,6 @@
 # standings_cascade_points.py
 # Tabla de posiciones (2 páginas por jugador) con columnas:
-# Pos | Equipo | Jugador | Prog(50) | JJ | W | L | Por jugar | Pts
+# Pos | Equipo | Jugador | Prog(13) | JJ | W | L | Por jugar | Pts
 # Reglas: LEAGUE + fecha, filtro (ambos miembros) o (CPU + miembro), dedup por id, ajustes algebraicos.
 # Orden: por puntos (desc). Empates: por W (desc), luego L (asc).
 
@@ -10,7 +10,7 @@ from datetime import datetime
 
 # ===== MODO DE EJECUCIÓN (switch) =====
 # Valores posibles: "DEBUG" o "ONLINE"
-MODE = "ONLINE"  # ← déjalo en DEBUG para que se comporte igual que ahora
+MODE = "DEBUG"  # ← déjalo en DEBUG para que se comporte igual que ahora
 
 CFG = {
     "DEBUG": dict(
@@ -110,9 +110,6 @@ LEAGUE_ORDER = [
 ("Mayolito7", "Dodgers"),
 ("Juanbrachog", "Padres"),
 ("RookieGaming22", "Rockies"),
-("Sanchez", "Guardians"),
-("Jose Acosta", "Braves"),
-("GEORGE", "Reds"),
 ]
 
 # ====== IDs alternativos por participante (para sumar sin duplicar) ======
@@ -287,10 +284,10 @@ def compute_team_record_for_user(username_exact: str, team_name: str):
     wins_adj, losses_adj = wins + adj_w, losses + adj_l
 
     # 5) Puntos y métricas de tabla
-    scheduled = 50
+    scheduled = 13
     played = max(wins_adj + losses_adj, 0)
     remaining = max(scheduled - played, 0)
-    points_base = 2 * wins_adj + 1 * losses_adj
+    points_base = 3 * wins_adj + 2 * losses_adj
 
     # 6) Ajuste manual de PUNTOS (desconexiones, sanciones, etc.)
     pts_extra, pts_reason = TEAM_POINT_ADJUSTMENTS.get(team_name, (0, ""))
@@ -418,10 +415,10 @@ def games_played_today_scl():
     """
     Lista juegos del DÍA (America/Santiago) en formato:
       'Yankees 1 - Brewers 2  - 30-08-2025 - 3:28 pm (hora Chile)'
-    Arreglos:
+    Mejoras:
+      - Deduplicación por id y también por (equipos, runs, pitcher_info).
       - Si la fecha viene sin tz, se asume UTC y se convierte a America/Santiago.
-      - Deduplicación por id y por una clave canónica (home, away, hr, ar, yyyy-mm-dd HH:MM).
-      - Se requiere que AMBOS participantes pertenezcan a la liga, o CPU + miembro.
+      - Se requiere que AMBOS participantes pertenezcan a la liga.
     """
     tz_scl = ZoneInfo("America/Santiago")
     tz_utc = ZoneInfo("UTC")
@@ -435,7 +432,7 @@ def games_played_today_scl():
 
     # Deduplicadores
     seen_ids = set()
-    seen_keys = set()  # (home, away, hr, ar, 'YYYY-MM-DD HH:MM')
+    seen_keys = set()  # (home, away, hr, ar, pitcher_info)
     items = []
 
     for g in dedup_by_id(all_pages):
@@ -454,16 +451,12 @@ def games_played_today_scl():
         if d_local.date() != today_local:
             continue
 
-        # Ambos jugadores deben pertenecer a la liga, o CPU + miembro
+        # Ambos jugadores deben pertenecer a la liga
         home_name_raw = (g.get("home_name") or "")
         away_name_raw = (g.get("away_name") or "")
         h_norm = normalize_user_for_compare(home_name_raw)
         a_norm = normalize_user_for_compare(away_name_raw)
-
-        h_mem = h_norm in LEAGUE_USERS_NORM
-        a_mem = a_norm in LEAGUE_USERS_NORM
-
-        if not ((h_mem and a_mem) or (is_cpu(home_name_raw) and a_mem) or (is_cpu(away_name_raw) and h_mem)):
+        if not (h_norm in LEAGUE_USERS_NORM and a_norm in LEAGUE_USERS_NORM):
             continue
 
         # Dedup por id
@@ -475,12 +468,11 @@ def games_played_today_scl():
         away = (g.get("away_full_name") or "").strip()
         hr = str(g.get("home_runs") or "0")
         ar = str(g.get("away_runs") or "0")
+        pitcher_info = (g.get("display_pitcher_info") or "").strip()
 
-        # Clave canónica por minuto (YYYY-MM-DD HH:MM)
-        minute_key = d_local.strftime("%Y-%m-%d %H:%M")
-        canon_key = (home, away, hr, ar, minute_key)
+        # Clave canónica más robusta
+        canon_key = (home, away, hr, ar, pitcher_info)
         if canon_key in seen_keys:
-            # Ya mostramos este juego con otra 'id' duplicada
             continue
 
         # Marcar vistos
@@ -500,24 +492,7 @@ def games_played_today_scl():
     return [s for _, s in items]
 
 
+# ====== FIN DEL BLOQUE ======
 
-def get_games_today():
-    games = []
-    for g in GAMES_DATA:  # <-- aquí debes usar donde guardas los juegos descargados
-        try:
-            # Usa la fecha del JSON
-            dt = datetime.strptime(g.get("display_date", ""), "%m/%d/%Y %H:%M:%S")
-            today = datetime.now().date()
-            if dt.date() == today:
-                home = g.get("home_full_name", "???")
-                away = g.get("away_full_name", "???")
-                hr = g.get("home_runs", "-")
-                ar = g.get("away_runs", "-")
-                hn = g.get("home_name", "")
-                an = g.get("away_name", "")
-                games.append(f"{away} ({an}) {ar} - {home} ({hn}) {hr}")
-        except Exception:
-            continue
-    return games
 
 # ====== FIN DEL BLOQUE ======
