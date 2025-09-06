@@ -126,6 +126,7 @@ FETCH_ALIASES = {
     "InsociaI": ["InsociaI"], 
     "X2KDUDE": ["Xx2kdudexX8466"],  
     "Francoxico": ["Xxbandiffft"], 
+    "Francoxico": ["XxBandido15xX"],
     "RookieGaming22": ["JimenezDperez127"],
     # agrega más si hace falta:
     # "OtroPrincipal": ["Alias1", "Alias2"],
@@ -133,12 +134,17 @@ FETCH_ALIASES = {
 
 # ===== Ajustes algebraicos por equipo (resets W/L) =====
 TEAM_RECORD_ADJUSTMENTS = {
- "Twins": (-1, 0),
- "Rangers": (0, 1),
- "Tigers": (-1, 0),
- "Red Sox": (0, -1),
- "Pirates": (1, -1),
- "Twins": (-1, 1),
+ #"Twins": (-1, 0),
+  #"Rangers": (0, 1),
+  #"Tigers": (-1, 0),
+ #"Red Sox": (0, -1),
+# "Pirates": (1, -1),
+ #"Twins": (-1, 1),
+ "Pirates": (1, -2),
+"Twins": (-1, 1),
+"Red Sox": (0, -2),
+"Rangers": (1, -2),
+"Tigers": (0, 1),
     # agrega más si hace falta
 }
 
