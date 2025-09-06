@@ -1,6 +1,6 @@
 # standings_cascade_points.py
 # Tabla de posiciones (2 páginas por jugador) con columnas:
-# Pos | Equipo | Jugador | Prog(13) | JJ | W | L | Por jugar | Pts
+# Pos | Equipo | Jugador | Prog(48) | JJ | W | L | Por jugar | Pts
 # Reglas: LEAGUE + fecha, filtro (ambos miembros) o (CPU + miembro), dedup por id, ajustes algebraicos.
 # Orden: por puntos (desc). Empates: por W (desc), luego L (asc).
 
@@ -10,7 +10,7 @@ from datetime import datetime
 
 # ===== MODO DE EJECUCIÓN (switch) =====
 # Valores posibles: "DEBUG" o "ONLINE"
-MODE = "DEBUG"  # ← déjalo en DEBUG para que se comporte igual que ahora
+MODE = "ONLINE"  # ← déjalo en DEBUG para que se comporte igual que ahora
 
 CFG = {
     "DEBUG": dict(
@@ -69,7 +69,7 @@ API = "https://mlb25.theshow.com/apis/game_history.json"
 PLATFORM = "psn"
 MODE = "LEAGUE"
 SINCE = datetime(2025, 8, 31)
-PAGES = (1, 2)          # <-- SOLO p1 y p2, como validaste
+PAGES = (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)          # <-- SOLO p1 y p2, como validaste
 TIMEOUT = 20
 RETRIES = 2
 
@@ -97,16 +97,18 @@ LEAGUE_ORDER = [
 ("Amorphis8076", "White Sox"),
 ("XxCarboriPRxx", "Athletics"),
 ("lednew__", "Rangers"),
-("CMP edou", "Astros"),
+("itschinoo02", "Astros"),
 ("LaSupraaa", "Angels"),
+("JoseAco21", "Braves"),
+("NeGrlxs--", "Guardians"),
 ("lnsocial", "Marlins"),
 ("LLGlovell", "Mets"),
 ("MR TRAMPA PR", "Nationals"),
-("El asesino03874", "Cubs"),
+("Papotico013213", "Cubs"),
 ("SARMIENTOFO-SHO", "Brewers"),
 ("Joshe_izarra", "Pirates"),
 ("X2KDUDE", "Cardinals"),
-("Xxbandiffft", "Diamondbacks"),
+("Francoxico", "Diamondbacks"),
 ("Mayolito7", "Dodgers"),
 ("Juanbrachog", "Padres"),
 ("RookieGaming22", "Rockies"),
@@ -118,9 +120,12 @@ FETCH_ALIASES = {
     # ejemplo real:
     "AV777": ["StrikerVJ"], 
     "MR TRAMPA PR": ["BENDITOPA"],  
-    "El asesino03874": ["Papotico013213"], 
+    "Papotico013213": ["El asesino03874"], 
+    "Insocial": ["lnsocial"], 
+    "lnsociaI": ["lnsociaI"], 
+    "InsociaI": ["InsociaI"], 
     "X2KDUDE": ["Xx2kdudexX8466"],  
-    "Xxbandiffft": ["Francoxico"], 
+    "Francoxico": ["Xxbandiffft"], 
     "RookieGaming22": ["JimenezDperez127"],
     # agrega más si hace falta:
     # "OtroPrincipal": ["Alias1", "Alias2"],
@@ -128,7 +133,12 @@ FETCH_ALIASES = {
 
 # ===== Ajustes algebraicos por equipo (resets W/L) =====
 TEAM_RECORD_ADJUSTMENTS = {
-    # "Blue Jays": (0, -1),
+ "Twins": (-1, 0),
+ "Rangers": (0, 1),
+ "Tigers": (-1, 0),
+ "Red Sox": (0, -1),
+ "Pirates": (1, -1),
+ "Twins": (-1, 1),
     # agrega más si hace falta
 }
 
@@ -284,10 +294,10 @@ def compute_team_record_for_user(username_exact: str, team_name: str):
     wins_adj, losses_adj = wins + adj_w, losses + adj_l
 
     # 5) Puntos y métricas de tabla
-    scheduled = 13
+    scheduled = 48
     played = max(wins_adj + losses_adj, 0)
     remaining = max(scheduled - played, 0)
-    points_base = 3 * wins_adj + 2 * losses_adj
+    points_base = 2 * wins_adj + 1 * losses_adj
 
     # 6) Ajuste manual de PUNTOS (desconexiones, sanciones, etc.)
     pts_extra, pts_reason = TEAM_POINT_ADJUSTMENTS.get(team_name, (0, ""))
