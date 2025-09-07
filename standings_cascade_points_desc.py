@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 # ===== MODO DE EJECUCIÓN (switch) =====
 # Valores posibles: "DEBUG" o "ONLINE"
-MODE = "ONLINE"  # DEBUG u ONLINE
+MODE = "DEBUG"  # DEBUG u ONLINE
 
 CFG = {
     "DEBUG": dict(
@@ -44,7 +44,7 @@ API = "https://mlb25.theshow.com/apis/game_history.json"
 PLATFORM = "psn"
 MODE_FILTER = "LEAGUE"
 SINCE = datetime(2025, 8, 31)
-PAGES = (1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40)          # ajusta según necesites
+PAGES = (1, 2, 3, 4, 5)          # <- ya no se usa (dejado por compatibilidad visual)
 TIMEOUT = 20
 RETRIES = 2
 
@@ -171,18 +171,34 @@ def dedup_by_id(gs):
 def norm_team(s: str) -> str:
     return (s or "").strip().lower()
 
+# ===== NUEVO: traer TODAS las páginas dinámicamente =====
+def fetch_all_pages(username: str):
+    """
+    Descarga todas las páginas disponibles para 'username' hasta que no haya más resultados.
+    """
+    all_games = []
+    page = 1
+    while True:
+        items = fetch_page(username, page)
+        if not items:
+            break
+        all_games.extend(items)
+        page += 1
+    return all_games
+
 # ==== Core: conteo W/L y puntos por equipo ====
 def compute_team_record_for_user(username_exact: str, team_name: str):
     # 1) Descargar principal + alias; dedup global por id
     pages_raw = []
     usernames_to_fetch = [username_exact] + FETCH_ALIASES.get(username_exact, [])
     for uname in usernames_to_fetch:
-        for p in PAGES:
-            page_items = fetch_page(uname, p)
-            pages_raw += page_items
-            if PRINT_CAPTURE_LIST:
-                for g in page_items:
-                    print(f"    [cap] {uname} p{p} id={g.get('id')}  {g.get('away_full_name','')} @ {g.get('home_full_name','')}  {g.get('display_date','')}")
+        # ANTES: for p in PAGES: pages_raw += fetch_page(uname, p)
+        # AHORA: traemos todas las páginas
+        page_items = fetch_all_pages(uname)
+        pages_raw += page_items
+        if PRINT_CAPTURE_LIST:
+            for g in page_items:
+                print(f"    [cap] {uname} id={g.get('id')}  {g.get('away_full_name','')} @ {g.get('home_full_name','')}  {g.get('display_date','')}")
     pages_dedup = dedup_by_id(pages_raw)
 
     # 2) Filtro: modo + fecha + equipo + (ambos miembros o CPU + miembro)
@@ -252,7 +268,7 @@ def compute_team_record_for_user(username_exact: str, team_name: str):
     played = max(wins_adj + losses_adj, 0)
     remaining = max(scheduled - played, 0)
 
-    # PUNTAJE: 3*W + 2*L  (para 2*W + 1*L cambia esta línea)
+    # PUNTAJE actual: 2*W + 1*L  (ajústalo a tu regla)
     points_base = 2 * wins_adj + 1 * losses_adj
 
     # 6) Ajuste manual de PUNTOS
@@ -334,8 +350,9 @@ def games_played_today_scl():
 
     all_pages = []
     for username_exact in usernames_pool:
-        for p in PAGES:
-            all_pages += fetch_page(username_exact, p)
+        # ANTES: for p in PAGES: all_pages += fetch_page(username_exact, p)
+        # AHORA:
+        all_pages += fetch_all_pages(username_exact)
 
     # Deduplicadores
     seen_ids = set()
@@ -413,5 +430,3 @@ if __name__ == "__main__":
     print("Calculando standings y juegos de hoy...")
     print(len(compute_rows()), "filas en standings")
     print(len(games_played_today_scl()), "juegos hoy")
-
-
