@@ -44,7 +44,7 @@ API = "https://mlb25.theshow.com/apis/game_history.json"
 PLATFORM = "psn"
 MODE_FILTER = "LEAGUE"
 SINCE = datetime(2025, 8, 31)
-PAGES = (1, 2)          # ajusta según necesites
+PAGES = (1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23)          # ajusta según necesites
 TIMEOUT = 20
 RETRIES = 2
 
@@ -413,3 +413,4 @@ if __name__ == "__main__":
     print("Calculando standings y juegos de hoy...")
     print(len(compute_rows()), "filas en standings")
     print(len(games_played_today_scl()), "juegos hoy")
+
