@@ -32,7 +32,7 @@ def update_data_cache():
 if __name__ == "__main__":
     # Para un entorno de producción, usa un scheduler como 'cron' (Linux) o 'Task Scheduler' (Windows).
     # Este bucle es para desarrollo/demostración.
-    UPDATE_INTERVAL_SECONDS = 60  # 5 minutos
+    UPDATE_INTERVAL_SECONDS = 300  # 5 minutos
     
     while True:
         update_data_cache()

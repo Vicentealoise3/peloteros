@@ -1,4 +1,5 @@
-flask
-requests
-tzdata
+Flask
 gunicorn
+requests
+pytz
+
